@@ -1,0 +1,8 @@
+# ignore tmp
+tmp/
+# ignore configs
+*.config
+*.config.py
+# ignore hidden files
+.*
+!/.gitignore

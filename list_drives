@@ -1,0 +1,29 @@
+#!/bin/bash
+
+for i in {a..z} # a is reserved for internal drive
+do
+	if [ -e "/dev/sd$i" ]; then
+		printf "\${goto 35}\${font Fira Sans:size=8}\${color1}/dev/sd%s \${font}\${color}  \${font Fira Sans:size=8}\${color1}(\${diskio_write /dev/sd%s} in, \${diskio_read /dev/sd%s} out) \n" "$i" "$i" "$i"
+		printf "\${voffset -8}\${goto 35}\${color}\${hr 1}\n"
+		printf "\${voffset -4}\${goto 35}Mount pt.\${goto 125}Total\${goto 180}Used\${goto 240}Free\n"
+		printf "\${voffset -8}\${goto 35}\${color}\${hr 1}\n"
+		for a in {1..9}
+		do
+			drive_state=`mount | grep sd$i$a`
+			if [ -n "$drive_state" ]; then
+				mount_point=`cat /etc/mtab | grep "/dev/sd$i$a" | awk '{print $2}'`
+				id=${mount_point/'/run/media/igor/'/''}
+				id=${id/'/media/'/''}
+				if [ ${#id} -gt 15 ]; then
+					nid=${id:0:12}"..."
+				else
+					nid=$id
+				fi
+				printf "\${color1}\${goto 35}%s\${goto 120}\${fs_size %s}\${goto 175}\${fs_used %s}\${goto 235}\${fs_free %s}\${goto 295}\${color}\n" "$nid" "$mount_point" "$mount_point" "$mount_point"
+			fi
+		done
+		if [ $a -le 9 ]; then
+			printf "\n"
+		fi
+	fi
+done
