@@ -1,5 +1,5 @@
 conky.config = {
-	update_interval=2,
+	update_interval=5,
 	total_run_times=0,
 	net_avg_samples=5,
 	cpu_avg_samples=5,
@@ -14,62 +14,52 @@ conky.config = {
 	text_buffer_size=2048,
 	own_window_class="Conky",
 	own_window=true,
-	own_window_type="desktop",
-	own_window_transparent=true,
 	own_window_argb_visual=true,
-	own_window_argb_value=200,
+  	own_window_argb_value=50,
 	own_window_hints="undecorated,below,sticky,skip_taskbar,skip_pager",
-	alignment="top_right",
-	gap_x=10,
-	gap_y=10,
-	maximum_width=275,
-	draw_shades=false,
-	default_color="999999",
-	color0="F2F2F2",
-	color1="D9D9D9",
-	color2="FFFFFF",
-	color3="AFAFAF",
-	color4="999999",
-	color5="222222"
+	alignment="top_left",
+	gap_x=15,
+	gap_y=40,
+	minimum_width=320,
+	maximum_width=350,
+	draw_shades=true,
+	draw_outline=true,
+	default_color="DDDDDD",
+	color0="888888",
+	color1="FFFFFF",
 }
 conky.text = [[
 # OS
 ${font ConkyColorsLogos:size=18}a${font}${color}${voffset -25}
-${goto 35}${font Fira Sans:style=Bold:size=8}${color1}${texeci 86400 lsb_release -d | awk {'print $2,$3'} } / ${machine} / ${kernel}${color}${font}
-${goto 35}Hostname: ${color1}${texeci 86400 uname -n}${color}${font} / Uptime: ${color1}${uptime}${color}${font}
-${goto 35}Startup: ${color1}${texeci 86400 systemd-analyze | awk '{print $4}' } kernel ${color} / ${color1}${texeci 86400 systemd-analyze | awk '{print $7}' } userspace${color} ${font}
-${goto 35}Desktop: ${color1}${desktop} of ${desktop_number}${color}${font} / Entropy: ${color1}${entropy_avail} / ${entropy_poolsize}  (${entropy_perc}%)${color}${font}
-${goto 35}Processes: ${color1}${running_processes} processes / ${running_threads} threads / ${processes}  total${color}${font}
-${goto 35}Updates: ${color1}${texecpi 7200 checkupdates | wc -l }${color}${font} packages / ${color1}${texecpi 7200 pacaur --check | wc -l }${color}${font} AUR${voffset 5}
+${goto 35}${font Fira Sans:style=Bold:size=8}${color1}${texeci 86400 lsb_release -d | awk {'print $2,$3'} } ${color}@${color1} ${color1}${texeci 86400 uname -n}${color}/${color1} ${machine} ${color}/${color1} ${kernel}${color}${font}
+${goto 35}Start: ${color1}${texecpi 86400 systemd-analyze | grep -i 'startup' | awk '{ printf "${color1}%.2fs${color} kernel / ${color1}%.2fs${color} user", $4, $7 }' } / ${color1}${uptime}${color} up${font}${font}
+${goto 35}${texecpi 1800 python ~/.conky/update_monitor}
+${goto 35}Desktop: ${color1}${desktop} of ${desktop_number}${color}${font} / Entropy: ${color1}${entropy_avail} / ${entropy_poolsize}  (${entropy_perc}%)${color}${font}${voffset 5}
 # CPUs
 ${color3}${font ConkyColors:size=18}c${font}${color}${voffset -24}
-${goto 35}Core \#1: ${color1}${cpu cpu1}%${color}${font} / ${color1}${freq_g 0}${color} GHz${font} / ${color1}${texeci 180 cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor}${color}${font} / ${color1}${acpitemp}°C${color}${font}
-${goto 35}Core \#2: ${color1}${cpu cpu2}%${color}${font} / ${color1}${freq_g 1}${color} GHz${font} / ${color1}${texeci 180 cat /sys/devices/system/cpu/cpu1/cpufreq/scaling_governor}${color}${font} / ${color1}${acpitemp}°C${color}${font}
+${goto 35}Core \#1: ${color1}${cpu cpu1}%${color}${font} / ${color1}${freq_g 0}${color} GHz${font} / ${color1}${texeci 600 cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor}${color}${font} / ${color1}${acpitemp}°C${color}${font}
+${goto 35}Core \#2: ${color1}${cpu cpu2}%${color}${font} / ${color1}${freq_g 1}${color} GHz${font} / ${color1}${texeci 600 cat /sys/devices/system/cpu/cpu1/cpufreq/scaling_governor}${color}${font} / ${color1}${acpitemp}°C${color}${font}
 # RAM, tmp, shm and swap... is there anything else?
 ${voffset 5}${color3}${font ConkyColors:size=18}g${font}${color}${voffset -24}
-${goto 35}RAM:${goto 75}${color1}${mem}${font}${color} / ${color1}${memmax} ($memperc%)${color}${font}${color}
-${goto 35}Swap:${goto 75}${color1}${swap}${font}${color} / ${color1}${swapmax} ($swapperc%)${color}${font}
-${goto 35}Shared:${goto 75}${color1}${fs_used /dev/shm}${font}${color} / ${color1}${fs_size /dev/shm} (${fs_used_perc /dev/shm}%)${color}${font}${color}
-${goto 35}Temp:${goto 75}${color1}${fs_used /tmp}${font}${color} / ${color1}${fs_size /tmp} (${fs_used_perc /tmp}%)${color}${font}${color}
+${goto 35}RAM: ${color1}${mem}${font}${color} / ${color1}${memmax} ($memperc%)${color}${font}${color}
+${goto 35}SWP: ${color1}${swap}${font}${color} / ${color1}${swapmax} ($swapperc%)${color}${font}
+${goto 35}SHM: ${color1}${fs_used /dev/shm}${font}${color} / ${color1}${fs_size /dev/shm} (${fs_used_perc /dev/shm}%)${color}${font}${color} 
+${goto 35}TMP: ${color1}${fs_used /tmp}${font}${color} / ${color1}${fs_size /tmp} (${fs_used_perc /tmp}%)${color}${font}${color}
 # Battery
-${texecpi 300 python ~/.conky/battery_service.py}
+${texecpi 600 python ~/.conky/battery_service.py}
 # Hard disks and removable drives
-${color3}${font ConkyColors:size=18}i${font}${color}${voffset -10}${goto 35}${texecpi 300 ~/.conky/list_drives}
-# Cloud storage // Dropbox and OneDrive MUST be done manually, so there is a reason why those python scripts exists
-${color3}${font ConkyColors:size=18}F${font}${color}${voffset -24}
-${goto 35}${font Fira Sans:size=8}${color}Service${goto 125}Total${goto 180}Used${goto 240}Free${color}${font}
-${voffset -8}${goto 35}${hr 1}${color1}
-${if_running dropbox}${texecpi 3600 ~/.conky/dropbox.py}${endif}
-${if_running onedrive}${texecpi 3600 ~/.conky/onedrive.py}${endif}
-${goto 35}Google Drive${goto 120}${fs_size /home/user/Google Drive}${goto 175}${fs_used /home/user/Google Drive}${goto 235}${fs_free /home/user/Google Drive}${goto 295}
+${color3}${font ConkyColors:size=18}i${font}${color}${voffset -14}${goto 35}${texecpi 600 ~/.conky/storage_monitor.py}
+# Cloud storage // Dropbox and OneDrive MUST be done manually, so why not python them all!?
+${color3}${font ConkyColors:size=18}F${font}${color}${voffset -14}${goto 35}${texecpi 1200 ~/.conky/cloud_storages_nonfuse.py}
 # - networks
 ${voffset 12}${texecpi 600 python ~/.conky/netinfo.py}
-# Media player - Clementine
-${voffset -15}${if_running clementine}${color3}${font ConkyColors:size=18}G${font}${color}${voffset -31}
-${goto 35}${color1}${texecpi 30 ~/.conky/conkyClementine -t ~/.conky/scripts/template.txt}${color}${font}${color}
-${endif}${if_running cantata}${color3}${font ConkyColors:size=18}G${font}${color}${voffset -26}
-${goto 35}${color1}{mpd_artist} - ${mpd_title} (${mpd_length})${color}${font}
-${goto 35}${color1}${goto 75}${mpd_album}${color}${font}${endif}
+# Media
+${voffset -12}${if_running clementine}${color3}${font ConkyColors:size=18}G${font}${color}${voffset -26}${texecpi 60 ~/.conky/clementine.py }${voffset 5}${endif}
+${voffset -12}${if_running mpd}${color3}${font ConkyColors:size=18}G${font}${color}${voffset -26}
+${if_mpd_playing}${goto 35}${mpd_status}: ${color1}${mpd_title}${color}
+${goto 35}by: ${color1}${mpd_artist}${color}
+${goto 35}from: ${color1}${mpd_album}${color}
+${goto 35}Track\#: ${color1}${mpd_track}${color} / Length: ${color1}${mpd_length}${color}
+${else}${goto 35}Playlist empty or stopped.${endif}${endif}${voffset 5}
 # Weather
-${texecpi 1800 python ~/.conky/openweather.py}
-]]
+${texecpi 1800 python ~/.conky/openweather.py}]]

@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import os, sys
 from sh import acpi
 
@@ -16,6 +17,9 @@ paths = {
 	"cur_volt": "/sys/class/power_supply/BAT1/voltage_now",
 }
 debug = False
+show_make_and_model = False
+show_capacity_ah = True
+show_capacity_wh = False
 
 #### here be dragons!
 
@@ -94,19 +98,20 @@ if os.path.isdir(paths["battery_path"]):
 			status = f.read()
 			status = status.strip() # have to strip it, it has a newline at the end...
 			f.close()
-			
-	# and this returns make and model
-	if os.path.isfile(paths["make"]):
-		with open(paths["make"]) as f:
-			make = f.read()
-			make = make.strip() # have to strip it, it has a newline at the end...
-			f.close()
+	
+	if show_make_and_model:	
+		# and this returns make and model
+		if os.path.isfile(paths["make"]):
+			with open(paths["make"]) as f:
+				make = f.read()
+				make = make.strip() # have to strip it, it has a newline at the end...
+				f.close()
 
-	if os.path.isfile(paths["model"]):
-		with open(paths["model"]) as f:
-			model = f.read()
-			model = model.strip() # have to strip it, it has a newline at the end...
-			f.close()
+		if os.path.isfile(paths["model"]):
+			with open(paths["model"]) as f:
+				model = f.read()
+				model = model.strip() # have to strip it, it has a newline at the end...
+				f.close()
 	
 	printd("Adapter: %s; Battery: %s, battery now: %.1f, battery design: %.1f, battery max: %.1f; made by %s, model %s" % (str(adapter_online), status, battery_now, battery_design, battery_max, make, model))
 
@@ -206,24 +211,34 @@ if os.path.isdir(paths["battery_path"]):
 	else:
 		to_print += "${goto 35}${color}Battery: ${color1}%s${color} / ${color1}%s%%${color}${font}\n" % (status, battery_left)
 	
-	# show manufacturer data
-	to_print += "${voffset 4}${goto 35}${color}Make: ${color1}%s ${color}/ Model: ${color1}%s${color}${font}\n" % (make, model)
+	if show_make_and_model:	
+		# show manufacturer data
+		to_print += "${voffset 4}${goto 35}${color}Make: ${color1}%s ${color}/ Model: ${color1}%s${color}${font}\n" % (make, model)
 	
 	# show capacity in Ah
-	to_print += "${goto 35}${color}Capacity: ${color1}%.1f Ah ${color}(${color1}%.1f%%${color}) / ${color1}%.1f Ah ${color}max${font}\n" % (battery_max/100000, battery_life, battery_design/100000)
+	to_print += "${goto 35}${color}Capacity: ${color1}"
+	
+	if show_capacity_ah:
+		to_print += "%.1f Ah ${color}(${color1}%.1f%%${color}) / ${color1}%.1f Ah ${color}max${font}\n" % (battery_max/100000, battery_life, battery_design/100000)
 	
 	# show capacity in Wh
-	to_print += "${goto 80}${color}${color1}%.1f Wh ${color} / ${color1}%.1f Wh ${color}max${font}\n" % (Ah2Wh(battery_max, min_volt), Ah2Wh(battery_design, min_volt))
+	if show_capacity_wh:
+		# this is in case we show both capacities...
+		if show_capacity_ah:
+			to_print += "${goto 80}"
+		
+		to_print += "%.1f Wh ${color} / ${color1}%.1f Wh ${color}max${font}\n" % (Ah2Wh(battery_max, min_volt), Ah2Wh(battery_design, min_volt))
 	
 	# show health status based on battery_health array
-	to_print += "${goto 35}${color}Health: ${color1}%s${color}${font}\n" % health
+	to_print += "${goto 35}${color}Health: ${color1}%s${color}${font} / " % health
 	
 	# show voltage
-	to_print += "${goto 35}${color}Voltage: ${color1}%.1f V${color} / ${color1}%.1f V${color} min${font}\n" % (cur_volt/1000000, min_volt/1000000)
+	to_print += "${color}Voltage: ${color1}%.1f V${color} / ${color1}%.1f V${color} min${font}" % (cur_volt/1000000, min_volt/1000000)
 	
 else:
 	icon = icons_discharging["1"]
 	to_print = "${color3}${font ConkyColors:size=18}%s${font}${color}${voffset -8}${goto 35}${color1}%s${color}${font}" % (icon, "Battery is faulty or not present")
-	
+
+to_print += "${voffset 10}"
 # finally, show info on conky. DON'T FORGET TO DISABLE DEBUG FLAG'
 print(to_print)

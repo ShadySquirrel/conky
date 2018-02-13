@@ -1,2 +1,0 @@
-${goto 35} ${color}[--datatype=ST]: ${color1}${font Fira Sans:style=Bold:size=8}[--datatype=TI]${font}${color} 
-${goto 35} ${color}by ${color1}${font Fira Sans:style=Bold:size=8}[--datatype=AR]${font}${color}
