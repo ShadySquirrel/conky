@@ -1,0 +1,142 @@
+#!/usr/bin/env python
+import os, sys, sh, time, datetime, json
+
+# Configuration
+
+## show debug messages
+DEBUG=False
+## store temporary files here
+STORAGE = "/home/igor/.conky/tmp/"
+## how much time between checks, minutes
+update_period = 60
+
+# CODE
+MODULE= "UpdateMonitor"
+# number of updates, per channel
+Updates = 0
+AUR = 0
+# file where data (number of updates, time) is stored
+store = "%s/updates.json" % STORAGE
+
+# this one prints debug output
+def printd(dstr):
+	if DEBUG:
+		print("[%s]: %s" % (MODULE, dstr))
+
+def check_age(time_refreshed):
+	time_now = time.time()
+	
+	time_diff = time_now - time_refreshed
+			
+	# guess that data is always old
+	state = False
+	
+	# convert update period to seconds
+	too_old = update_period * 60
+	
+	printd("Data from %s, now %s, difference %s, max %s" % (str(time_refreshed), str(time_now), str(time_diff), str(too_old)))
+	 
+	# now, check if data is actually old
+	if too_old <= time_diff :
+		state = True
+	
+	return state
+
+def timestamp2String(timestamp, date=True):
+	if date:
+		time_format = "%H:%M, %d.%m.%Y"
+	else:
+		time_format = "%H:%M"
+
+	return datetime.datetime.fromtimestamp(int(timestamp)).strftime(time_format)
+
+def check_updates():
+	try:
+		# search for 'em
+		printd("running checkupdates()")
+		sysUpd = sh.checkupdates().strip()
+		if len(sysUpd) > 0:
+			sysUpd = sysUpd.split("\n")
+		
+
+		printd("Running pacaur")
+		aurUpd = sh.pacaur("-k",_ok_code=[0,1]).strip()
+		if len(aurUpd) > 0:
+			aurUpd = aurUpd.split("\n")
+		
+		printd("Repo: %s, AUR: %s" % (sysUpd, aurUpd))
+		
+		# count 'em, timestamp 'em and save them in JSON
+		updates = { "packages": len(sysUpd), "aur": len(aurUpd), "refreshed": time.time() }
+			
+		printd("Found %d packages in repo, and %d in AUR" % (updates['packages'], updates['aur']))
+		
+		# save to JSON now.
+		with open(store, "w") as f:
+			json.dump(updates, f)
+			f.close()
+		
+		return updates
+	except Exception as e:
+		printd("failed fetching updates - something is broken or you're not online.")
+		printd(type(e))    # the exception instance
+		printd(e.args)     # arguments stored in .args
+		printd(e)          # __str__ allows args to be printed directly,
+		return False
+
+def read_update_data():
+	update_data = None
+	with open(store, "r") as f:
+		update_data = json.load(f)
+		f.close()
+	
+	return update_data
+	
+# main block here
+to_check = False
+# define data here, just to be able to reuse it if no further checking is needed
+data = None
+
+if os.path.isfile(store):
+	data = read_update_data()
+	
+	# check age
+	to_check = check_age(data['refreshed'])
+	printd("update data found. Refreshing? %s" % str(to_check))
+	
+else:
+	printd("no update info found, refreshing")
+	to_check = True
+
+# now, if 'to check' flag is set, check.	
+if to_check:
+	printd("checking for updates")
+	data = check_updates()
+
+# finally, format everything
+if data != False:
+	to_print = "${goto 35}"
+	# show updates only when present
+	if data['packages'] > 0:
+		to_print += "Updates: ${color1}%d${color}" % data['packages']
+	
+	# show aur packages only when present
+	if data['aur'] > 0:
+		# if there are both aur and repo updates, add a splitter between them
+		if data['packages'] > 0:
+			to_print += " / "
+		
+		to_print += "AUR: ${color1}%d${color}" % data['aur']
+	
+	# now case when both channels are zeroed
+	if data['aur'] == 0 and data['packages'] == 0:
+		to_print += "No updates available"
+		
+	# now finally add time.
+	to_print += " / Last check: ${color1}%s${color}" % timestamp2String(data['refreshed'])
+else:
+	to_print = "${goto 35}Can't check for updates / Last check: ${color1}%s${color}" % timestamp2String(time.time())
+
+# and, print.
+print(to_print)
+
